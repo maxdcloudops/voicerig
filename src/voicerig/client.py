@@ -248,7 +248,12 @@ async def amain() -> int:
 
 
 def main() -> None:
-    sys.exit(asyncio.run(amain()))
+    code = asyncio.run(amain())
+    sys.stdout.flush()
+    sys.stderr.flush()
+    # The results are written. LiveKit's native library can abort (SIGTRAP, exit 133) while tearing down after a run,
+    # and that would turn a PASS into a failing exit code. Leave without running native destructors.
+    os._exit(code)
 
 
 if __name__ == "__main__":

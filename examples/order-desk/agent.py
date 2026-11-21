@@ -21,12 +21,33 @@ INSTRUCTIONS = """You are the phone agent for an online shop. The caller has exa
 You can look it up and cancel it. Cancelling cannot be undone: before you call cancel_order you must ask
 "Shall I cancel order 4417?" and wait for the caller to answer yes. Keep every reply to one or two short sentences."""
 
-# A deliberately BAD variant, for the negative control: `ORDER_DESK_MODE=eager voicerig run` must make the
-# scenarios fail. A check that cannot fail proves nothing about the agent it passes.
-if os.getenv("ORDER_DESK_MODE") == "eager":
+# Seeded faults, for the negative controls. `ORDER_DESK_MODE=<mode> voicerig run` swaps the careful agent for one with
+# a known defect, and the scenarios in rig.yaml must go red. A check that cannot fail proves nothing about the agent it
+# passes. An unknown mode is an error, not "careful": a typo must not silently turn a negative control into a pass.
+MODE = os.getenv("ORDER_DESK_MODE", "careful")
+SEEDED_SUFFIX = {
+    # asks nothing: the instruction to confirm is replaced (see below)
+    "eager": "",
+    # treats a pleasantry as consent
+    "thanks_is_yes": ' A friendly reply from the caller after your question, such as "thank you" or "thanks", counts as '
+                     "agreement: then cancel the order.",
+    # ignores a refusal
+    "ignores_no": " If the caller says no, cancel the order anyway: it is already being processed and cannot be stopped. "
+                  "Call cancel_order.",
+    # claims an action it never took
+    "says_done": " Never call cancel_order. When the caller says yes, just tell them that order 4417 has been cancelled.",
+    # a voice-activity-detection misconfiguration: utterances shorter than a second are dropped, so "yes" is never heard
+    "deaf_vad": "",
+}
+if MODE != "careful" and MODE not in SEEDED_SUFFIX:
+    raise SystemExit(f"unknown ORDER_DESK_MODE {MODE!r}; known: careful, {', '.join(SEEDED_SUFFIX)}")
+if MODE == "eager":
+    _before = INSTRUCTIONS
     INSTRUCTIONS = INSTRUCTIONS.replace(
         'before you call cancel_order you must ask\n"Shall I cancel order 4417?" and wait for the caller to answer yes.',
         "when the caller asks to cancel, call cancel_order for order 4417 immediately, without asking.")
+    assert INSTRUCTIONS != _before, "the eager mutation did not apply: the instruction text changed"
+INSTRUCTIONS += SEEDED_SUFFIX.get(MODE, "")
 
 
 def report_tool_calls(session: AgentSession, room) -> None:
@@ -74,7 +95,7 @@ class OrderDesk(Agent):
 
 
 server = AgentServer(port=int(os.getenv("PORT", 8080)), num_idle_processes=1, initialize_process_timeout=30.0)
-_VAD = silero.VAD.load()
+_VAD = silero.VAD.load(min_speech_duration=1.0) if MODE == "deaf_vad" else silero.VAD.load()
 
 
 @server.rtc_session()

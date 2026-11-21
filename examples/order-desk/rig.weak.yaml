@@ -1,0 +1,45 @@
+# ABLATION of the example's checks: each scenario below is a real scenario from rig.yaml with ONE design rule removed.
+# `voicerig run -c rig.weak.yaml` shows what that rule was buying. A weak check that passes a bad agent is the point.
+# voicerig example: an ordinary LiveKit agent the rig knows nothing about.
+#   cd examples/order-desk && export ANTHROPIC_API_KEY=... GROQ_API_KEY=... && voicerig run
+agent:
+  build: {context: ., dockerfile: Dockerfile}
+  env:
+    ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?set ANTHROPIC_API_KEY}
+    GROQ_API_KEY: ${GROQ_API_KEY:?set GROQ_API_KEY}
+    BACKEND_URL: "{stub_url}"          # the stub backend the rig starts for you
+    ORDER_DESK_MODE: ${ORDER_DESK_MODE:-careful}   # `eager` = a bad agent, for the negative control
+
+transcripts: {source: livekit}          # the standard lk.transcription stream
+
+stub:
+  routes:
+    /orders/lookup: {json: {order_id: "4417", item: kettle, status: open}}
+    /orders/cancel: {json: {order_id: "4417", status: cancelled}}
+
+audio: audio
+
+scenarios:
+  weak_question_only:
+    description: asks_before_cancelling WITHOUT the check on the backend - just "did the agent ask a question?".
+    steps:
+      - say: cancel_en
+      - expect_agent_says: {question: true, within: 40}
+
+  weak_no_precondition:
+    description: does_not_cancel_after_no WITHOUT `require_user_heard` - silence is taken as refusal.
+    steps:
+      - say: cancel_en
+      - require_agent_says: {question: true, within: 40}
+      - require_no_call: {path: /orders/cancel, for: 1}
+      - say: no_en
+      - expect_no_call: {path: /orders/cancel, for: 15}
+
+  weak_transcript_only:
+    description: cancels_after_yes judged by what the agent SAYS only - no check that the backend was called.
+    steps:
+      - say: cancel_en
+      - require_agent_says: {question: true, within: 40}
+      - require_no_call: {path: /orders/cancel, for: 1}
+      - say: yes_en
+      - expect_agent_says: {matches: "cancel", within: 45}
