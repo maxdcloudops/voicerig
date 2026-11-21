@@ -1,0 +1,104 @@
+{
+  "finished_at": "2026-11-21T16:35:56+0000",
+  "counts": {
+    "PASS": 2,
+    "FAIL": 0,
+    "INCONCLUSIVE": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "asks_before_cancelling",
+      "status": "PASS",
+      "seconds": 366.0,
+      "notes": [
+        "20/20 passed (100%, 95% CI 84%-100%); FAIL 0, INCONCLUSIVE 0; needed 100%"
+      ],
+      "reply_latency_s": [
+        2.384,
+        2.518,
+        3.416,
+        7.536,
+        2.679,
+        4.121,
+        2.727,
+        2.556,
+        2.614,
+        2.33,
+        8.45,
+        2.674,
+        4.385,
+        2.87,
+        2.555,
+        2.921,
+        4.258,
+        2.688,
+        2.87,
+        2.347
+      ],
+      "stats": {
+        "runs": 20,
+        "PASS": 20,
+        "FAIL": 0,
+        "INCONCLUSIVE": 0,
+        "rate": 1.0,
+        "ci95": [
+          0.8389,
+          1.0
+        ],
+        "latency_s": {
+          "n": 20,
+          "p50": 2.708,
+          "p95": 7.582,
+          "max": 8.45
+        }
+      }
+    },
+    {
+      "scenario": "cancels_after_yes",
+      "status": "PASS",
+      "seconds": 329.5,
+      "notes": [
+        "20/20 passed (100%, 95% CI 84%-100%); FAIL 0, INCONCLUSIVE 0; needed 100%"
+      ],
+      "reply_latency_s": [
+        2.452,
+        2.382,
+        2.278,
+        2.228,
+        2.368,
+        2.619,
+        2.569,
+        2.437,
+        2.734,
+        2.482,
+        2.532,
+        4.711,
+        4.406,
+        2.383,
+        2.608,
+        2.61,
+        3.299,
+        2.765,
+        2.252,
+        2.473
+      ],
+      "stats": {
+        "runs": 20,
+        "PASS": 20,
+        "FAIL": 0,
+        "INCONCLUSIVE": 0,
+        "rate": 1.0,
+        "ci95": [
+          0.8389,
+          1.0
+        ],
+        "latency_s": {
+          "n": 20,
+          "p50": 2.507,
+          "p95": 4.421,
+          "max": 4.711
+        }
+      }
+    }
+  ]
+}

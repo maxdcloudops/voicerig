@@ -35,7 +35,7 @@ Needs Docker, Python 3.10+, and whatever API keys your agent uses.
 pip install -e .                # from a checkout (not on PyPI yet)
 cd examples/order-desk
 export ANTHROPIC_API_KEY=... GROQ_API_KEY=...
-voicerig run                    # ~3 minutes, a few cents of STT + LLM
+voicerig run                    # a few minutes; it calls your STT and LLM providers (API cost not measured)
 ```
 
 ```
@@ -155,6 +155,23 @@ The same rig also ran, unchanged apart from `transcripts: {source: data}`, again
 publishes JSON transcripts on its own data topic. The example also passed 6/6 with every image forced to
 `linux/amd64` (emulated on that Mac).
 
+## Negative controls in the example
+
+`ORDER_DESK_MODE=<mode> voicerig run` swaps the careful agent for one with a known, seeded defect. Each must make a
+scenario go red; an unknown mode is an error, so a typo cannot turn a negative control into a silent pass.
+
+| mode | defect | what must catch it |
+|---|---|---|
+| `eager` | cancels without asking | `asks_before_cancelling` |
+| `thanks_is_yes` | a polite reply counts as consent | `thanks_is_not_a_yes` |
+| `ignores_no` | cancels even after "no" | `does_not_cancel_after_no` |
+| `says_done` | says it cancelled, never calls the tool | `cancels_after_yes` |
+| `deaf_vad` | VAD drops utterances under 1 s ("yes" is never heard) | `hears_yes` |
+
+`voicerig run -c rig.weak.yaml` runs three deliberately weakened checks (question only, no precondition,
+transcript only): each is a real scenario with one design rule removed, and each passes a defective agent that the
+real scenario fails. They exist to show what the rules buy.
+
 ## Limits - read before you trust a green run
 
 - **LiveKit Agents only.** It joins a LiveKit room and reads LiveKit transcripts or data messages.
@@ -165,13 +182,18 @@ publishes JSON transcripts on its own data topic. The example also passed 6/6 wi
   yours to record; STT behaviour on TTS audio is not STT behaviour on people.
 - **Real models are not deterministic.** Hence `attempts`, `repeat` and INCONCLUSIVE. A scenario that passes
   once may fail next run; measure a rate.
-- **It costs API calls** (cents per full run) and takes minutes, not milliseconds.
+- **It costs API calls** (we have not measured how much) and takes minutes, not milliseconds.
 - **Network.** Containers use fixed addresses (`172.28.0.0/24` by default, `network.subnet` to change) because
   WebRTC candidates must be reachable container-to-container. Only one rig runs at a time.
 - **LiveKit server is pinned** (`v1.13.11`, by digest) so a run is reproducible; set `livekit: {image: ...}` to test against another version.
 - Developed on macOS/arm64 with Docker Desktop. The example also passed 6/6 with every image forced to `linux/amd64`
   (`DOCKER_DEFAULT_PLATFORM=linux/amd64`, emulated on that Mac - not a native Linux host). A native Linux run is the
   manual `e2e.yml` workflow, which needs your provider keys as repository secrets.
+
+## Raw results
+
+The measurements quoted above, and those in the accompanying paper, are in [evaluation/icst2027](evaluation/icst2027/README.md) as the
+files `voicerig run` wrote, with the commands that produced them.
 
 ## Commands
 

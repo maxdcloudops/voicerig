@@ -3,7 +3,7 @@ import asyncio
 import time
 
 from voicerig.config import Step
-from voicerig.engine import QUESTION, percentile, run_steps, wilson
+from voicerig.engine import QUESTION, aggregate_status, percentile, run_steps, wilson
 
 
 class FakeStub:
@@ -230,3 +230,22 @@ def test_percentile_interpolates():
     xs = [1.0, 2.0, 3.0, 4.0, 5.0]
     assert percentile(xs, 50) == 3.0 and percentile(xs, 0) == 1.0 and percentile(xs, 100) == 5.0
     assert abs(percentile(xs, 95) - 4.8) < 1e-9
+
+
+# --- the verdict of a repeated scenario -----------------------------------------------------------------------------
+
+def test_repeat_verdict_fail_only_when_a_repetition_failed():
+    assert aggregate_status({"PASS": 5, "FAIL": 0, "INCONCLUSIVE": 0}, 5, 1.0) == "PASS"
+    assert aggregate_status({"PASS": 0, "FAIL": 5, "INCONCLUSIVE": 0}, 5, 1.0) == "FAIL"
+    assert aggregate_status({"PASS": 0, "FAIL": 2, "INCONCLUSIVE": 3}, 5, 1.0) == "FAIL"
+
+
+def test_repeat_verdict_all_unreached_is_inconclusive_not_fail():
+    # a deaf agent never reaches the state: blaming it with FAIL would claim something the run could not observe
+    assert aggregate_status({"PASS": 0, "FAIL": 0, "INCONCLUSIVE": 5}, 5, 1.0) == "INCONCLUSIVE"
+    assert aggregate_status({"PASS": 4, "FAIL": 0, "INCONCLUSIVE": 1}, 5, 1.0) == "INCONCLUSIVE"
+
+
+def test_repeat_verdict_respects_the_required_rate():
+    assert aggregate_status({"PASS": 4, "FAIL": 0, "INCONCLUSIVE": 1}, 5, 0.75) == "PASS"
+    assert aggregate_status({"PASS": 3, "FAIL": 1, "INCONCLUSIVE": 1}, 5, 0.75) == "FAIL"

@@ -1,0 +1,125 @@
+voicerig: building the rig image (voicerig-rig:0.2.0) ...
+sha256:82306cad0e52c7cf68490450bcc62ab631c2cd1a15bf7f21625b486b2f152a15
+voicerig: starting LiveKit, the stub backend and your agent ...
+#1 [internal] load local bake definitions
+#1 reading from stdin 670B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 268B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 66B done
+#5 DONE 0.0s
+
+#6 [1/6] FROM docker.io/library/python:3.12-slim@sha256:a0f57064cbdcd6285fa45f51237ab0b35ea8ebaed06a1f5973e89e19dfb86704
+#6 resolve docker.io/library/python:3.12-slim@sha256:a0f57064cbdcd6285fa45f51237ab0b35ea8ebaed06a1f5973e89e19dfb86704 0.0s done
+#6 DONE 0.0s
+
+#7 [2/6] WORKDIR /app
+#7 CACHED
+
+#8 [3/6] COPY requirements.txt .
+#8 CACHED
+
+#9 [4/6] RUN pip install --no-cache-dir -r requirements.txt
+#9 CACHED
+
+#10 [5/6] RUN python -c "from livekit.plugins.silero import VAD; VAD.load()"
+#10 CACHED
+
+#11 [6/6] COPY agent.py .
+#11 DONE 0.0s
+
+#12 exporting to image
+#12 exporting layers 0.0s done
+#12 exporting manifest sha256:d8650fa59a63f5865e8fb1c3a3e63508535be6afae5cfc827c4968eebcc8843f done
+#12 exporting config sha256:2ae37520df64446c98ac1afc559d189a774332814072a370899a8f8e2ed0b21d done
+#12 exporting attestation manifest sha256:5aacc2c117393bf4a64599dca05af42bb1d1b99401699c021fdf9fc681116c1d 0.0s done
+#12 exporting manifest list sha256:3c5fc388057393b95c55e22ba81e7fa55d611aa0e9d991ac1879124bd0d87dd6 done
+#12 naming to docker.io/library/voicerig-agent-under-test:latest done
+#12 DONE 0.1s
+
+#13 resolving provenance for metadata file
+#13 DONE 0.0s
+ voicerig-agent-under-test  Built
+ Network voicerig_rig  Creating
+ Network voicerig_rig  Created
+ Container voicerig-stub-1  Creating
+ Container voicerig-livekit-1  Creating
+ Container voicerig-livekit-1  Created
+ Container voicerig-stub-1  Created
+ Container voicerig-agent-1  Creating
+ Container voicerig-agent-1  Created
+ Container voicerig-stub-1  Starting
+ Container voicerig-livekit-1  Starting
+ Container voicerig-stub-1  Started
+ Container voicerig-livekit-1  Started
+ Container voicerig-agent-1  Starting
+ Container voicerig-agent-1  Started
+voicerig: waiting for the agent to register with LiveKit ...
+ Container voicerig-livekit-1  Running
+ Container voicerig-stub-1  Running
+ Container voicerig-agent-1  Running
+/usr/local/lib/python3.12/site-packages/jwt/api_jwt.py:149: InsecureKeyLengthWarning: The HMAC key is 6 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+
+[PASS] hears_yes  (10s)
+    - agent heard: 'yes'
+
+[PASS] asks_before_cancelling  (17s)
+    - agent said: 'Shall I cancel order 4417?'
+    - no call to /orders/cancel for 5s
+    - no tool call cancel_order for 1s
+    - reply latency after end of speech: 2.54s
+
+[PASS] cancels_after_yes  (20s)
+    - agent said: 'I can help you with that. Shall I cancel order 4417?'
+    - no call to /orders/cancel for 1s
+    - backend received POST /orders/cancel
+    - agent called tool cancel_order("{'order_id': '4417'}")
+    - reply latency after end of speech: 2.50s
+
+[PASS] does_not_cancel_after_no  (31s)
+    - agent said: 'I can help you cancel your order. Shall I cancel order 4417?'
+    - no call to /orders/cancel for 1s
+    - agent heard: 'No.'
+    - no call to /orders/cancel for 15s
+    - reply latency after end of speech: 2.79s
+
+[PASS] thanks_is_not_a_yes  (31s)
+    - agent said: 'I can help you cancel your order. Shall I cancel order 4417?'
+    - no call to /orders/cancel for 1s
+    - agent heard: 'Thank you.'
+    - no call to /orders/cancel for 15s
+    - reply latency after end of speech: 2.46s
+
+[PASS] answers_a_question  (34s)
+    - 3/3 passed (100%, 95% CI 44%-100%); FAIL 0, INCONCLUSIVE 0; needed 100%
+    - reply latency after end of speech: 2.35s, 2.34s, 2.49s
+
+==== 6 passed, 0 failed, 0 inconclusive ====
+ Container voicerig-agent-1  Stopping
+ Container voicerig-agent-1  Stopped
+ Container voicerig-agent-1  Removing
+ Container voicerig-agent-1  Removed
+ Container voicerig-livekit-1  Stopping
+ Container voicerig-stub-1  Stopping
+ Container voicerig-stub-1  Stopped
+ Container voicerig-stub-1  Removing
+ Container voicerig-stub-1  Removed
+ Container voicerig-livekit-1  Stopped
+ Container voicerig-livekit-1  Removing
+ Container voicerig-livekit-1  Removed
+ Network voicerig_rig  Removing
+ Network voicerig_rig  Removed
+voicerig: results in <checkout>/examples/order-desk/voicerig-results/results.json
+EXIT=0

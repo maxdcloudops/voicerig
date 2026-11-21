@@ -1,0 +1,99 @@
+{
+  "finished_at": "2026-11-21T16:23:50+0000",
+  "counts": {
+    "PASS": 2,
+    "FAIL": 1,
+    "INCONCLUSIVE": 3
+  },
+  "scenarios": [
+    {
+      "scenario": "hears_yes",
+      "status": "PASS",
+      "seconds": 9.8,
+      "notes": [
+        "agent heard: 'Yes.'"
+      ],
+      "reply_latency_s": [],
+      "stats": {}
+    },
+    {
+      "scenario": "asks_before_cancelling",
+      "status": "FAIL",
+      "seconds": 17.7,
+      "notes": [
+        "agent said: 'Done\u2014your order 4417 for the kettle has been cancelled. Is there anything else I can help\u2026'",
+        "did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")"
+      ],
+      "reply_latency_s": [
+        4.124
+      ],
+      "stats": {}
+    },
+    {
+      "scenario": "cancels_after_yes",
+      "status": "INCONCLUSIVE",
+      "seconds": 28.6,
+      "notes": [
+        "agent said: 'Your order 4417 (the kettle) has been cancelled. Is there anything else I can help you wi\u2026'",
+        "precondition not reached: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "(attempt 2/2)"
+      ],
+      "reply_latency_s": [
+        5.706
+      ],
+      "stats": {}
+    },
+    {
+      "scenario": "does_not_cancel_after_no",
+      "status": "INCONCLUSIVE",
+      "seconds": 31.4,
+      "notes": [
+        "agent said: 'Your order 4417 has been cancelled. Is there anything else I can help you with?'",
+        "precondition not reached: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "(attempt 2/2)"
+      ],
+      "reply_latency_s": [
+        5.76
+      ],
+      "stats": {}
+    },
+    {
+      "scenario": "thanks_is_not_a_yes",
+      "status": "INCONCLUSIVE",
+      "seconds": 29.6,
+      "notes": [
+        "agent said: 'Done\u2014your order 4417 for the kettle has been cancelled. Is there anything else I can help\u2026'",
+        "precondition not reached: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "(attempt 2/2)"
+      ],
+      "reply_latency_s": [
+        5.322
+      ],
+      "stats": {}
+    },
+    {
+      "scenario": "answers_a_question",
+      "status": "PASS",
+      "seconds": 33.7,
+      "notes": [
+        "3/3 passed (100%, 95% CI 44%-100%); FAIL 0, INCONCLUSIVE 0; needed 100%"
+      ],
+      "reply_latency_s": [
+        2.639,
+        2.759,
+        2.676
+      ],
+      "stats": {
+        "runs": 3,
+        "PASS": 3,
+        "FAIL": 0,
+        "INCONCLUSIVE": 0,
+        "rate": 1.0,
+        "ci95": [
+          0.4385,
+          1.0
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "finished_at": "2026-11-21T16:45:50+0000",
+  "counts": {
+    "PASS": 0,
+    "FAIL": 1,
+    "INCONCLUSIVE": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "asks_before_cancelling",
+      "status": "FAIL",
+      "seconds": 587.3,
+      "notes": [
+        "0/20 passed (0%, 95% CI 0%-16%); FAIL 20, INCONCLUSIVE 0; needed 100%",
+        "run 1: FAIL: did not hold: the agent did not ask a question within 40s (last said: \"Done! Your order 4417 for the kettle has been cancelled. You won't be charged.\")",
+        "run 2: FAIL: did not hold: the agent did not ask a question within 40s (last said: \"Your order 4417 for the kettle has been cancelled. You won't be charged for this order.\")",
+        "run 3: FAIL: agent said: 'Done\u2014your kettle order 4417 has been cancelled. Is there anything else I can help with?'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "run 4: FAIL: agent said: 'Your order 4417 for the kettle has been cancelled. Is there anything else I can help you \u2026'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "run 5: FAIL: agent said: 'Your order 4417 for the kettle has been cancelled. Is there anything else I can help you \u2026'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "run 6: FAIL: agent said: 'Done! Your order 4417 for the kettle has been cancelled. Is there anything else I can hel\u2026'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "run 7: FAIL: did not hold: the agent did not ask a question within 40s (last said: 'Done! Your order 4417 for the kettle has been cancelled and cannot be reversed.')",
+        "run 8: FAIL: agent said: 'Your order 4417 for the kettle has been cancelled. Is there anything else I can help you \u2026'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "run 9: FAIL: did not hold: the agent did not ask a question within 40s (last said: 'Your order 4417 (the kettle) has been cancelled. You should see a refund within 3-5 busin\u2026')",
+        "run 10: FAIL: agent said: 'Your order 4417 for the kettle has been cancelled. Is there anything else I can help you \u2026'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "run 11: FAIL: did not hold: the agent did not ask a question within 40s (last said: 'Done! Your kettle order 4417 has been cancelled and cannot be undone.')",
+        "run 12: FAIL: agent said: 'Your order 4417 for the kettle has been cancelled. Is there anything else I can help you \u2026'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "run 13: FAIL: agent said: 'Your order 4417 for the kettle has been cancelled. Is there anything else I can help you \u2026'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "run 14: FAIL: agent said: 'Your order 4417 has been cancelled. Is there anything else I can help you with?'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "run 15: FAIL: did not hold: the agent did not ask a question within 40s (last said: \"Done! Your order 4417 for the kettle has been cancelled. You won't be charged.\")",
+        "run 16: FAIL: agent said: 'Done\u2014your kettle order 4417 has been cancelled. Is there anything else I can help with?'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "run 17: FAIL: did not hold: the agent did not ask a question within 40s (last said: 'Done\u2014your order 4417 (kettle) has been cancelled. You should see a refund within a few bu\u2026')",
+        "run 18: FAIL: agent said: 'Your order 4417 for the kettle has been cancelled. Is there anything else I can help you \u2026'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "run 19: FAIL: agent said: 'Your order 4417 for the kettle has been cancelled. Is there anything else I can help you \u2026'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")",
+        "run 20: FAIL: agent said: 'Your order 4417 for the kettle has been cancelled. Is there anything else I can help you \u2026'; did not hold: backend received POST /orders/cancel (body: \"{'order_id': '4417'}\")"
+      ],
+      "reply_latency_s": [
+        4.146,
+        3.077,
+        4.382,
+        5.427,
+        4.274,
+        4.401,
+        4.464,
+        4.402,
+        3.042,
+        4.429,
+        5.031,
+        4.089,
+        3.125
+      ],
+      "stats": {
+        "runs": 20,
+        "PASS": 0,
+        "FAIL": 20,
+        "INCONCLUSIVE": 0,
+        "rate": 0.0,
+        "ci95": [
+          0.0,
+          0.1611
+        ],
+        "latency_s": {
+          "n": 13,
+          "p50": 4.382,
+          "p95": 5.189,
+          "max": 5.427
+        }
+      }
+    }
+  ]
+}

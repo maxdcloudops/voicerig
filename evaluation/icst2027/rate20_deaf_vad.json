@@ -1,0 +1,50 @@
+{
+  "finished_at": "2026-11-21T18:47:51+0000",
+  "counts": {
+    "PASS": 0,
+    "FAIL": 1,
+    "INCONCLUSIVE": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "hears_yes",
+      "status": "FAIL",
+      "seconds": 604.7,
+      "notes": [
+        "0/20 passed (0%, 95% CI 0%-16%); FAIL 20, INCONCLUSIVE 0; needed 100%",
+        "run 1: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 2: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 3: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 4: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 5: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 6: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 7: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 8: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 9: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 10: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 11: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 12: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 13: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 14: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 15: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 16: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 17: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 18: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 19: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)",
+        "run 20: FAIL: did not hold: the agent did not hear anything matching /\\byes\\b/ within 20s (nothing heard at all)"
+      ],
+      "reply_latency_s": [],
+      "stats": {
+        "runs": 20,
+        "PASS": 0,
+        "FAIL": 20,
+        "INCONCLUSIVE": 0,
+        "rate": 0.0,
+        "ci95": [
+          0.0,
+          0.1611
+        ]
+      }
+    }
+  ]
+}

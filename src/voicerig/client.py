@@ -189,7 +189,7 @@ async def run_scenario(cfg: Config, name: str, url: str, key: str, secret: str, 
         counts = {st: sum(r.status == st for r in runs) for st in ("PASS", "FAIL", "INCONCLUSIVE")}
         ok = counts["PASS"]
         lo, hi = engine.wilson(ok, n)
-        v = engine.Verdict("PASS" if ok / n >= sc.min_pass_rate else "FAIL")
+        v = engine.Verdict(engine.aggregate_status(counts, n, sc.min_pass_rate))
         v.notes.append(f"{ok}/{n} passed ({ok / n:.0%}, 95% CI {lo:.0%}-{hi:.0%}); FAIL {counts['FAIL']}, "
                        f"INCONCLUSIVE {counts['INCONCLUSIVE']}; needed {sc.min_pass_rate:.0%}")
         v.stats = {"runs": n, **counts, "rate": ok / n, "ci95": [round(lo, 4), round(hi, 4)]}

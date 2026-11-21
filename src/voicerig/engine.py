@@ -51,6 +51,15 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     return (max(0.0, centre - half), min(1.0, centre + half))
 
 
+def aggregate_status(counts: dict, n: int, min_pass_rate: float) -> str:
+    """The verdict of a scenario repeated `n` times. PASS when enough repetitions passed; otherwise FAIL if any
+    repetition failed, and INCONCLUSIVE only when none did - every shortfall was a state that was never reached.
+    Calling that a FAIL would blame the agent for a condition the run could not observe."""
+    if n > 0 and counts["PASS"] / n >= min_pass_rate:
+        return "PASS"
+    return "FAIL" if counts["FAIL"] else "INCONCLUSIVE"
+
+
 def percentile(xs: list[float], q: float) -> float:
     """Linear-interpolation percentile, q in [0, 100]. With few samples p95 is close to the maximum - say so."""
     s = sorted(xs)

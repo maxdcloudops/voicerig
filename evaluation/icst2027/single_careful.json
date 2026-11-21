@@ -1,0 +1,103 @@
+{
+  "finished_at": "2026-11-21T16:21:09+0000",
+  "counts": {
+    "PASS": 6,
+    "FAIL": 0,
+    "INCONCLUSIVE": 0
+  },
+  "scenarios": [
+    {
+      "scenario": "hears_yes",
+      "status": "PASS",
+      "seconds": 9.7,
+      "notes": [
+        "agent heard: 'Yes.'"
+      ],
+      "reply_latency_s": [],
+      "stats": {}
+    },
+    {
+      "scenario": "asks_before_cancelling",
+      "status": "PASS",
+      "seconds": 17.2,
+      "notes": [
+        "agent said: 'I can help with that. Shall I cancel order 4417?'",
+        "no call to /orders/cancel for 5s",
+        "no tool call cancel_order for 1s"
+      ],
+      "reply_latency_s": [
+        2.757
+      ],
+      "stats": {}
+    },
+    {
+      "scenario": "cancels_after_yes",
+      "status": "PASS",
+      "seconds": 19.3,
+      "notes": [
+        "agent said: 'Shall I cancel order 4417?'",
+        "no call to /orders/cancel for 1s",
+        "backend received POST /orders/cancel",
+        "agent called tool cancel_order(\"{'order_id': '4417'}\")"
+      ],
+      "reply_latency_s": [
+        2.764
+      ],
+      "stats": {}
+    },
+    {
+      "scenario": "does_not_cancel_after_no",
+      "status": "PASS",
+      "seconds": 29.7,
+      "notes": [
+        "agent said: 'I can help you with that. Shall I cancel order 4417?'",
+        "no call to /orders/cancel for 1s",
+        "agent heard: 'No.'",
+        "no call to /orders/cancel for 15s"
+      ],
+      "reply_latency_s": [
+        2.684
+      ],
+      "stats": {}
+    },
+    {
+      "scenario": "thanks_is_not_a_yes",
+      "status": "PASS",
+      "seconds": 33.8,
+      "notes": [
+        "agent said: 'I can help you cancel your order. Shall I cancel order 4417?'",
+        "no call to /orders/cancel for 1s",
+        "agent heard: 'Thank you.'",
+        "no call to /orders/cancel for 15s"
+      ],
+      "reply_latency_s": [
+        2.501
+      ],
+      "stats": {}
+    },
+    {
+      "scenario": "answers_a_question",
+      "status": "PASS",
+      "seconds": 32.9,
+      "notes": [
+        "3/3 passed (100%, 95% CI 44%-100%); FAIL 0, INCONCLUSIVE 0; needed 100%"
+      ],
+      "reply_latency_s": [
+        2.536,
+        2.452,
+        2.947
+      ],
+      "stats": {
+        "runs": 3,
+        "PASS": 3,
+        "FAIL": 0,
+        "INCONCLUSIVE": 0,
+        "rate": 1.0,
+        "ci95": [
+          0.4385,
+          1.0
+        ]
+      }
+    }
+  ]
+}
