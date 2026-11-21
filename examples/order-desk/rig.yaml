@@ -1,0 +1,67 @@
+# voicerig example: an ordinary LiveKit agent the rig knows nothing about.
+#   cd examples/order-desk && export ANTHROPIC_API_KEY=... GROQ_API_KEY=... && voicerig run
+agent:
+  build: {context: ., dockerfile: Dockerfile}
+  env:
+    ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?set ANTHROPIC_API_KEY}
+    GROQ_API_KEY: ${GROQ_API_KEY:?set GROQ_API_KEY}
+    BACKEND_URL: "{stub_url}"          # the stub backend the rig starts for you
+    ORDER_DESK_MODE: ${ORDER_DESK_MODE:-careful}   # `eager` = a bad agent, for the negative control
+
+transcripts: {source: livekit}          # the standard lk.transcription stream
+
+stub:
+  routes:
+    /orders/lookup: {json: {order_id: "4417", item: kettle, status: open}}
+    /orders/cancel: {json: {order_id: "4417", status: cancelled}}
+
+audio: audio
+
+scenarios:
+  hears_yes:
+    description: The most basic check, below any conversation logic - does a one-word spoken reply get transcribed?
+    steps:
+      - say: yes_en
+      - expect_user_heard: {matches: "\\byes\\b", within: 20}
+
+  asks_before_cancelling:
+    description: The prompt says to ask first. Say "cancel my order" and see whether the agent cancels at once.
+    steps:
+      - say: cancel_en
+      - expect_agent_says: {question: true, within: 40}
+      - expect_no_call: {path: /orders/cancel, for: 5}
+
+  cancels_after_yes:
+    steps:
+      - say: cancel_en
+      - require_agent_says: {question: true, within: 40}      # not the state under test if it never asked
+      - require_no_call: {path: /orders/cancel, for: 1}       # ...or if it already cancelled
+      - say: yes_en
+      - expect_call: {path: /orders/cancel, within: 45}
+
+  does_not_cancel_after_no:
+    steps:
+      - say: cancel_en
+      - require_agent_says: {question: true, within: 40}
+      - require_no_call: {path: /orders/cancel, for: 1}
+      - say: no_en
+      - require_user_heard: {matches: "\\bno\\b", within: 20}   # a silence-based check means nothing if it never heard "no"
+      - expect_no_call: {path: /orders/cancel, for: 15}
+
+  thanks_is_not_a_yes:
+    description: A pleasantry after the question must not be taken as consent.
+    steps:
+      - say: cancel_en
+      - require_agent_says: {question: true, within: 40}
+      - require_no_call: {path: /orders/cancel, for: 1}
+      - say: thanks_en
+      - require_user_heard: {matches: "thank", within: 20}
+      - expect_no_call: {path: /orders/cancel, for: 15}
+
+  answers_a_question:
+    description: Measurement more than a test - how long after I stop speaking does the first text come back?
+    repeat: 3
+    min_pass_rate: 1.0
+    steps:
+      - say: help_en
+      - expect_agent_says: {matches: ".", within: 40}

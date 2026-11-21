@@ -1,0 +1,7 @@
+livekit-agents==1.6.7
+livekit-plugins-anthropic==1.6.7
+livekit-plugins-groq==1.6.7
+livekit-plugins-silero==1.6.7
+# Pinned on purpose: a newer anthropic requires httpx2.AsyncClient, which livekit-plugins-anthropic 1.6.7 does not
+# pass, so every session crashes in AgentSession setup (TypeError: Invalid `http_client` ... uses `httpx2`).
+anthropic==0.117.0

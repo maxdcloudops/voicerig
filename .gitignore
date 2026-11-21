@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+.voicerig/
+voicerig-results/
+.env
+*.egg-info/
+.pytest_cache/

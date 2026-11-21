@@ -1,0 +1,25 @@
+[project]
+name = "voicerig"
+version = "0.1.0"
+description = "Test a LiveKit voice agent by speaking to it: real audio in, real agent, recorded backend calls out. No human, no cloud."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Maksym Derbenov" }]
+requires-python = ">=3.10"
+dependencies = ["pyyaml>=6"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "aiohttp>=3.9"]
+
+[project.scripts]
+voicerig = "voicerig.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

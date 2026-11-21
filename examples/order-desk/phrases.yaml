@@ -1,0 +1,5 @@
+- {name: cancel_en,  voice: Samantha, text: "Please cancel my order."}
+- {name: yes_en,     voice: Samantha, text: "Yes."}
+- {name: no_en,      voice: Samantha, text: "No."}
+- {name: thanks_en,  voice: Samantha, text: "Thank you."}
+- {name: help_en,    voice: Samantha, text: "What can you help me with?"}
