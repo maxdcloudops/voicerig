@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1 - 2026-11-21
+
+- Seeded faults for the example agent (`ORDER_DESK_MODE`: `eager`, `thanks_is_yes`, `ignores_no`, `says_done`,
+  `deaf_vad`; an unknown mode is an error) and `rig.weak.yaml`, three deliberately weakened checks.
+- A repeated scenario whose repetitions were all `INCONCLUSIVE` is now `INCONCLUSIVE`, not `FAIL`.
+- The client exits without running LiveKit's native teardown, which could abort (exit 133) after a passing run.
+- `evaluation/icst2027`: the raw results behind the paper's measurements.
+
 ## 0.2.0 - 2026-11-21
 
 - **Tool calls.** `expect_tool_call` / `expect_no_tool_call` (and the `require_` forms) assert on the tool a voice
