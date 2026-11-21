@@ -17,6 +17,9 @@ from .config import Config, ConfigError
 
 RIG_IMAGE = f"voicerig-rig:{__version__}"
 AGENT_TAG = "voicerig-agent-under-test"
+# Pinned by version AND index digest (multi-arch), so a new LiveKit release cannot change what a run tests.
+# Refresh: docker buildx imagetools inspect livekit/livekit-server:<tag>  (read the top-level Digest).
+LIVEKIT_IMAGE = "livekit/livekit-server:v1.13.11@sha256:25cd902de7cacbd5f1f779f6a6ac1eae20ba8f56b0935934ce6b0ab80d1e3d20"
 
 # Versions the rig was developed against; the LiveKit *server* image is configurable (`livekit.image`).
 DOCKERFILE = """\
@@ -93,7 +96,7 @@ def render(cfg: Config) -> dict[str, Any]:
         "networks": {"rig": {"ipam": {"config": [{"subnet": ip["subnet"]}]}}},
         "services": {
             "livekit": {
-                "image": cfg.livekit.get("image", "livekit/livekit-server:latest"),
+                "image": cfg.livekit.get("image", LIVEKIT_IMAGE),
                 "command": ["--dev", "--bind", "0.0.0.0", "--node-ip", ip["livekit"]],
                 "networks": {"rig": {"ipv4_address": ip["livekit"]}},
             },

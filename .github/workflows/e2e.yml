@@ -1,0 +1,50 @@
+name: End-to-end (Linux, real Docker)
+
+# Runs the bundled example against real model providers on a Linux/amd64 runner. It costs a few cents and needs
+# two repository secrets, so it is manual only and never runs for pull requests (fork PRs get no secrets anyway).
+#   Settings -> Secrets and variables -> Actions: ANTHROPIC_API_KEY, GROQ_API_KEY
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "careful = the agent under test behaves; eager = a deliberately bad agent (every guard must fail)"
+        type: choice
+        options: [careful, eager]
+        default: careful
+
+permissions:
+  contents: read
+
+jobs:
+  example:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: voicerig run
+        working-directory: examples/order-desk
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          ORDER_DESK_MODE: ${{ inputs.mode }}
+        run: |
+          set +e
+          voicerig run
+          code=$?
+          # careful must pass; eager must NOT pass - an eager agent that "passes" means the checks are blind
+          if [ "$ORDER_DESK_MODE" = "eager" ]; then
+            [ "$code" -ne 0 ] && echo "eager agent failed the rig, as it should" && exit 0
+            echo "::error::the deliberately bad agent passed every scenario" && exit 1
+          fi
+          exit $code
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: voicerig-results-${{ inputs.mode }}
+          path: examples/order-desk/voicerig-results/
+          if-no-files-found: ignore

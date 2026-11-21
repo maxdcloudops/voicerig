@@ -1,0 +1,10 @@
+name: Feature request
+description: Something you could not express or observe
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What behaviour of your agent could you not test?
+      description: Describe the behaviour first, then the step or adapter you imagine.
+    validations: {required: true}

@@ -53,3 +53,14 @@ def test_custom_subnet_moves_every_address(rig):
 def test_bad_subnet_is_rejected(rig):
     with pytest.raises(ConfigError, match="/24"):
         compose.render(make(rig, "network: {subnet: 10.0.0.0/16}"))
+
+
+def test_default_livekit_image_is_pinned_by_digest(rig):
+    # A floating tag means a LiveKit release can change what a run tests without any change here.
+    image = compose.render(make(rig))["services"]["livekit"]["image"]
+    assert "@sha256:" in image and ":latest" not in image
+
+
+def test_livekit_image_can_be_overridden(rig):
+    c = compose.render(make(rig, "livekit: {image: 'livekit/livekit-server:v1.0.0'}"))
+    assert c["services"]["livekit"]["image"] == "livekit/livekit-server:v1.0.0"

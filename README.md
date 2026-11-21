@@ -48,6 +48,8 @@ The exit code is 0 only if every scenario passed, so it drops into CI. Results a
 
 ## Point it at your agent
 
+Short version below; the step-by-step walkthrough is [docs/add-your-agent.md](docs/add-your-agent.md).
+
 `rig.yaml`:
 
 ```yaml
@@ -138,8 +140,10 @@ publishes JSON transcripts on its own data topic.
 - **It costs API calls** (cents per full run) and takes minutes, not milliseconds.
 - **Network.** Containers use fixed addresses (`172.28.0.0/24` by default, `network.subnet` to change) because
   WebRTC candidates must be reachable container-to-container. Only one rig runs at a time.
-- **`livekit/livekit-server:latest` is the default** - pin `livekit: {image: ...}` if you need reproducibility.
-- Developed on macOS/arm64 with Docker Desktop. Linux/amd64 is untested here.
+- **LiveKit server is pinned** (`v1.13.11`, by digest) so a run is reproducible; set `livekit: {image: ...}` to test against another version.
+- Developed on macOS/arm64 with Docker Desktop. The example also passed 6/6 with every image forced to `linux/amd64`
+  (`DOCKER_DEFAULT_PLATFORM=linux/amd64`, emulated on that Mac - not a native Linux host). A native Linux run is the
+  manual `e2e.yml` workflow, which needs your provider keys as repository secrets.
 
 ## Commands
 
@@ -154,7 +158,7 @@ voicerig tts phrases.yaml -o audio      synthesize utterances (macOS `say` or es
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
-.venv/bin/pytest          # 38 tests, no Docker; the engine, config, stub and compose generation
+.venv/bin/pytest          # 40 tests, no Docker; the engine, config, stub and compose generation
 ```
 
 Apache-2.0.
