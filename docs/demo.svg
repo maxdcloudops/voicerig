@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1011" height="452" viewBox="0 0 1011 452" role="img" aria-label="examples/order-desk - real output of voicerig run (verdict lines only)">
+<rect width="1011" height="452" rx="10" fill="#0d1117"/>
+<rect width="1011" height="36" rx="10" fill="#161b22"/><rect y="26" width="1011" height="10" fill="#161b22"/>
+<circle cx="20" cy="18" r="6" fill="#f85149"/><circle cx="40" cy="18" r="6" fill="#d29922"/><circle cx="60" cy="18" r="6" fill="#3fb950"/>
+<text x="505.5" y="23" fill="#8b949e" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="13" text-anchor="middle">examples/order-desk - real output of voicerig run (verdict lines only)</text>
+<text x="22" y="68" fill="#e6edf3" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">$ voicerig run</text>
+<text x="22" y="88" fill="#3fb950" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">[PASS] hears_yes</text>
+<text x="22" y="108" fill="#3fb950" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">[PASS] asks_before_cancelling</text>
+<text x="22" y="128" fill="#3fb950" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">[PASS] cancels_after_yes</text>
+<text x="22" y="148" fill="#3fb950" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">[PASS] does_not_cancel_after_no</text>
+<text x="22" y="168" fill="#3fb950" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">[PASS] thanks_is_not_a_yes</text>
+<text x="22" y="188" fill="#3fb950" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">[PASS] answers_a_question</text>
+<text x="22" y="208" fill="#3fb950" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">==== 6 passed, 0 failed, 0 inconclusive ====</text>
+<text x="22" y="248" fill="#e6edf3" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">$ ORDER_DESK_MODE=eager voicerig run   # a deliberately bad agent: it must go red</text>
+<text x="22" y="268" fill="#3fb950" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">[PASS] hears_yes</text>
+<text x="22" y="288" fill="#f85149" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">[FAIL] asks_before_cancelling</text>
+<text x="22" y="308" fill="#8b949e" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">    - agent said: &#x27;Done—your order 4417 for the kettle has been cancelled. Is there anything else I can…</text>
+<text x="22" y="328" fill="#8b949e" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">    - did not hold: backend received POST /orders/cancel (body: &quot;{&#x27;order_id&#x27;: &#x27;4417&#x27;}&quot;)</text>
+<text x="22" y="348" fill="#d29922" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">[INCONCLUSIVE] cancels_after_yes</text>
+<text x="22" y="368" fill="#d29922" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">[INCONCLUSIVE] does_not_cancel_after_no</text>
+<text x="22" y="388" fill="#d29922" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">[INCONCLUSIVE] thanks_is_not_a_yes</text>
+<text x="22" y="408" fill="#3fb950" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">[PASS] answers_a_question</text>
+<text x="22" y="428" fill="#f85149" font-weight="bold" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" xml:space="preserve">==== 2 passed, 1 failed, 3 inconclusive ====</text>
+</svg>

@@ -3,7 +3,7 @@ import asyncio
 import time
 
 from voicerig.config import Step
-from voicerig.engine import QUESTION, run_steps
+from voicerig.engine import QUESTION, percentile, run_steps, wilson
 
 
 class FakeStub:
@@ -22,6 +22,10 @@ class FakeCall:
 
     def __init__(self, stub, script=None):
         self.events, self.stub, self.script, self.speech_ended_at = [], stub, script or {}, 0.0
+        self.tool_calls, self.tool_hook = [], False
+
+    def tool(self, name, **arguments):
+        self.tool_calls.append({"t": time.time(), "name": name, "arguments": arguments})
 
     def agent(self, text, role="assistant"):
         now = time.time()
@@ -152,3 +156,77 @@ def test_question_and_matches_combine():
     assert run(call, stub, ("say", {"audio": "x"}), ("expect_agent_says", spec)).status == "PASS"
     call = FakeCall(stub, {"x": lambda c, s: c.agent("I will apply now.")})
     assert run(call, stub, ("say", {"audio": "x"}), ("expect_agent_says", spec)).status == "FAIL"        # about applying, but no question
+
+
+# --- tool calls (reported by the agent-side hook) -------------------------------------------------------------
+
+def hooked(stub, script=None):
+    call = FakeCall(stub, script)
+    call.tool_hook = True
+    return call
+
+
+def test_tool_call_passes_when_the_agent_called_it_with_matching_arguments():
+    stub = FakeStub()
+    call = hooked(stub, {"yes": lambda c, s: c.tool("cancel_order", order_id="4417")})
+    v = run(call, stub, ("say", {"audio": "yes"}), ("expect_tool_call", {"name": "cancel_*", "args_contains": {"order_id": "4417"}, "within": 1}))
+    assert v.status == "PASS"
+
+
+def test_tool_call_fails_on_wrong_arguments_and_names_what_it_saw():
+    stub = FakeStub()
+    call = hooked(stub, {"yes": lambda c, s: c.tool("cancel_order", order_id="9999")})
+    v = run(call, stub, ("say", {"audio": "yes"}), ("expect_tool_call", {"name": "cancel_order", "args_contains": {"order_id": "4417"}, "within": 0.3}))
+    assert v.status == "FAIL" and "cancel_order" in v.notes[-1]
+
+
+def test_missing_tool_call_says_the_hook_is_absent_when_it_never_announced_itself():
+    stub = FakeStub()
+    call = FakeCall(stub)
+    v = run(call, stub, ("say", {"audio": "yes"}), ("expect_tool_call", {"name": "cancel_order", "within": 0.3}))
+    assert v.status == "FAIL" and "hook" in v.notes[-1]
+
+
+def test_require_tool_call_is_inconclusive_not_a_fail():
+    stub = FakeStub()
+    v = run(hooked(stub), stub, ("say", {"audio": "yes"}), ("require_tool_call", {"name": "look_up_order", "within": 0.3}))
+    assert v.status == "INCONCLUSIVE"
+
+
+def test_no_tool_call_fails_when_a_matching_tool_was_called():              # negative control
+    stub = FakeStub()
+    call = hooked(stub, {"cancel": lambda c, s: c.tool("cancel_order", order_id="4417")})
+    v = run(call, stub, ("say", {"audio": "cancel"}), ("expect_no_tool_call", {"name": "cancel_order", "for": 0.2}))
+    assert v.status == "FAIL"
+
+
+def test_no_tool_call_passes_only_with_the_hook_present():
+    stub = FakeStub()
+    assert run(hooked(stub), stub, ("say", {"audio": "no"}), ("expect_no_tool_call", {"name": "cancel_order", "for": 0.1})).status == "PASS"
+
+
+def test_no_tool_call_is_inconclusive_without_the_hook_never_a_free_pass():
+    stub = FakeStub()
+    v = run(FakeCall(stub), stub, ("say", {"audio": "no"}), ("expect_no_tool_call", {"name": "cancel_order", "for": 0.1}))
+    assert v.status == "INCONCLUSIVE" and "hook" in v.notes[-1]
+
+
+# --- statistics ---------------------------------------------------------------------------------------------
+
+def test_wilson_interval_is_not_a_point_estimate_at_the_extremes():
+    lo, hi = wilson(20, 20)
+    assert 0.83 < lo < 0.85 and hi == 1.0           # "20 of 20" means "at least ~84%", not "100%"
+    lo, hi = wilson(0, 20)
+    assert lo == 0.0 and 0.15 < hi < 0.17
+    lo, hi = wilson(10, 20)
+    assert 0.29 < lo < 0.30 and 0.70 < hi < 0.71 and abs((lo + hi) / 2 - 0.5) < 0.01
+
+
+def test_wilson_with_no_trials_is_everything_not_a_division_by_zero():
+    assert wilson(0, 0) == (0.0, 1.0)
+
+
+def test_percentile_interpolates():
+    xs = [1.0, 2.0, 3.0, 4.0, 5.0]
+    assert percentile(xs, 50) == 3.0 and percentile(xs, 0) == 1.0 and percentile(xs, 100) == 5.0
+    assert abs(percentile(xs, 95) - 4.8) < 1e-9

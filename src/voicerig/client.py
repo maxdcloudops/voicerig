@@ -26,6 +26,7 @@ from . import engine
 from .config import Config, load
 
 TOPIC_TRANSCRIPTION = "lk.transcription"
+TOPIC_TOOLS = "voicerig.tool_calls"     # the optional agent-side hook publishes here (docs/tool-calls.md)
 USER_IDENTITY = "rig-user"
 FRAME_MS = 10
 
@@ -50,6 +51,8 @@ class Call:
         self.room_name = f"rig-{label}-{uuid.uuid4().hex[:6]}"[:60]
         self.room = rtc.Room()
         self.events: list[dict] = []
+        self.tool_calls: list[dict] = []
+        self.tool_hook = False                      # set once the agent announces the hook
         self.source = rtc.AudioSource(16000, 1)
         self.speech_ended_at = 0.0
         self._tasks: set[asyncio.Task] = set()
@@ -69,6 +72,29 @@ class Call:
                 # a transcription stream is sent by the participant it is ABOUT: ours for what the user said
                 role = "user" if identity == USER_IDENTITY else "assistant"
                 self._add(role, text, t_first or time.time(), final=dict(reader.info.attributes or {}).get("lk.transcription_final"))
+        task = asyncio.ensure_future(consume())
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
+
+    def _on_tool_stream(self, reader: rtc.TextStreamReader, identity: str) -> None:
+        async def consume() -> None:
+            parts = [chunk async for chunk in reader]
+            try:
+                msg = json.loads("".join(parts))
+            except ValueError:
+                return
+            if not isinstance(msg, dict):
+                return
+            if msg.get("hook") == "ready":
+                self.tool_hook = True
+            elif isinstance(msg.get("name"), str):
+                args = msg.get("arguments")
+                if isinstance(args, str):               # livekit-agents hands arguments over as a JSON string
+                    try:
+                        args = json.loads(args)
+                    except ValueError:
+                        pass
+                self.tool_calls.append({"t": time.time(), "name": msg["name"], "arguments": args})
         task = asyncio.ensure_future(consume())
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
@@ -96,6 +122,7 @@ class Call:
             self.room.register_text_stream_handler(TOPIC_TRANSCRIPTION, self._on_text_stream)
         else:
             self.room.on("data_received", self._on_data)
+        self.room.register_text_stream_handler(TOPIC_TOOLS, self._on_tool_stream)
         await self.room.connect(self.url, token)
         track = rtc.LocalAudioTrack.create_audio_track("rig-mic", self.source)
         await self.room.local_participant.publish_track(
@@ -153,17 +180,26 @@ async def run_attempt(cfg: Config, name: str, url: str, key: str, secret: str, s
 
 async def run_scenario(cfg: Config, name: str, url: str, key: str, secret: str, stub: Stub, attempts: int) -> engine.Verdict:
     sc = cfg.scenarios[name]
-    if sc.repeat > 1:
+    repeat = int(os.environ.get("REPEAT") or 0) or sc.repeat
+    if repeat > 1:
         # A single run proves nothing for behaviour near a threshold: repeat in fresh rooms and report a RATE.
         # INCONCLUSIVE counts against the rate: a repetition that never reached the state under test is not a pass.
-        runs = [await run_attempt(cfg, name, url, key, secret, stub) for _ in range(sc.repeat)]
-        ok = sum(r.status == "PASS" for r in runs)
-        v = engine.Verdict("PASS" if ok / sc.repeat >= sc.min_pass_rate else "FAIL")
-        v.notes.append(f"{ok}/{sc.repeat} passed ({ok / sc.repeat:.0%}); needed {sc.min_pass_rate:.0%}")
+        n = repeat
+        runs = [await run_attempt(cfg, name, url, key, secret, stub) for _ in range(n)]
+        counts = {st: sum(r.status == st for r in runs) for st in ("PASS", "FAIL", "INCONCLUSIVE")}
+        ok = counts["PASS"]
+        lo, hi = engine.wilson(ok, n)
+        v = engine.Verdict("PASS" if ok / n >= sc.min_pass_rate else "FAIL")
+        v.notes.append(f"{ok}/{n} passed ({ok / n:.0%}, 95% CI {lo:.0%}-{hi:.0%}); FAIL {counts['FAIL']}, "
+                       f"INCONCLUSIVE {counts['INCONCLUSIVE']}; needed {sc.min_pass_rate:.0%}")
+        v.stats = {"runs": n, **counts, "rate": ok / n, "ci95": [round(lo, 4), round(hi, 4)]}
         for i, r in enumerate(runs, 1):
             if r.status != "PASS":
                 v.notes.append(f"run {i}: {r.status}: {'; '.join(r.notes[-2:])}")
             v.latencies += r.latencies
+        if len(v.latencies) >= 5:
+            q = {f"p{k}": round(engine.percentile(v.latencies, k), 3) for k in (50, 95)}
+            v.stats["latency_s"] = {"n": len(v.latencies), **q, "max": round(max(v.latencies), 3)}
         return v
     last = engine.Verdict("INCONCLUSIVE", ["never ran"])
     for attempt in range(1, attempts + 1):
@@ -194,11 +230,14 @@ async def amain() -> int:
         print(f"\n[{r.status}] {n}  ({secs:.0f}s)")
         for note in r.notes:
             print(f"    - {note}")
-        if r.latencies:
+        if "latency_s" in r.stats:
+            ls = r.stats["latency_s"]
+            print(f"    - reply latency after end of speech: p50 {ls['p50']:.2f}s, p95 {ls['p95']:.2f}s, max {ls['max']:.2f}s (n={ls['n']})")
+        elif r.latencies:
             print(f"    - reply latency after end of speech: {', '.join(f'{x:.2f}s' for x in r.latencies)}")
         sys.stdout.flush()
         report.append({"scenario": n, "status": r.status, "seconds": round(secs, 1), "notes": r.notes,
-                       "reply_latency_s": [round(x, 3) for x in r.latencies]})
+                       "reply_latency_s": [round(x, 3) for x in r.latencies], "stats": r.stats})
     counts = engine.summarize(results)
     print(f"\n==== {counts['PASS']} passed, {counts['FAIL']} failed, {counts['INCONCLUSIVE']} inconclusive ====")
     out = Path(os.environ.get("OUT_DIR", "/rig/out"))

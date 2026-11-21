@@ -3,6 +3,7 @@
     voicerig validate            check rig.yaml (and the WAV files) without starting Docker
     voicerig run                 build, start, run every scenario, tear down. Exit 0 only if all PASS
     voicerig run --only a,b      just those scenarios
+    voicerig run --only a --repeat 20     a rate with a 95% interval instead of one verdict
     voicerig run --keep          leave the rig running afterwards (inspect with `voicerig logs agent`)
     voicerig logs [service]      agent | livekit | stub
     voicerig down                tear down a kept rig
@@ -81,7 +82,8 @@ def cmd_run(args) -> int:
             print(f"voicerig: {why}", file=sys.stderr)
             _compose(root, "logs", "--tail", "40", "agent", check=False)
             return 3
-        env_flags = [f"-e{k}={v}" for k, v in (("ONLY", args.only or ""), ("ATTEMPTS", str(args.attempts or ""))) if v]
+        env_flags = [f"-e{k}={v}" for k, v in (("ONLY", args.only or ""), ("ATTEMPTS", str(args.attempts or "")),
+                                                ("REPEAT", str(args.repeat or ""))) if v]
         code = _compose(root, "run", "--rm", *env_flags, "client", check=False)
         if code != 0:
             print("\n--- last agent log lines (the failure may be there) ---", flush=True)
@@ -140,6 +142,8 @@ def main(argv: list[str] | None = None) -> None:
         if name == "run":
             p.add_argument("--only", help="comma-separated scenario names")
             p.add_argument("--attempts", type=int, help="override settings.attempts")
+            p.add_argument("--repeat", type=int, help="run every selected scenario N times in fresh rooms and report a rate "
+                                                     "with a 95%% interval (use with --only)")
             p.add_argument("--keep", action="store_true")
         if name == "logs":
             p.add_argument("service", nargs="?", default="agent")

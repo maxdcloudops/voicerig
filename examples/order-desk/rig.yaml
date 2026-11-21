@@ -30,6 +30,7 @@ scenarios:
       - say: cancel_en
       - expect_agent_says: {question: true, within: 40}
       - expect_no_call: {path: /orders/cancel, for: 5}
+      - expect_no_tool_call: {name: cancel_order, for: 1}      # needs the agent-side hook (docs/tool-calls.md)
 
   cancels_after_yes:
     steps:
@@ -38,6 +39,7 @@ scenarios:
       - require_no_call: {path: /orders/cancel, for: 1}       # ...or if it already cancelled
       - say: yes_en
       - expect_call: {path: /orders/cancel, within: 45}
+      - expect_tool_call: {name: cancel_order, args_contains: {order_id: "4417"}, within: 10}
 
   does_not_cancel_after_no:
     steps:

@@ -28,6 +28,8 @@ CHECKS: dict[str, set[str]] = {
     "call": {"path", "within", "body_contains", "since"},
     "no_call": {"path", "for", "since"},
     "no_agent_reply": {"for", "since"},
+    "tool_call": {"name", "args_contains", "within", "since"},       # needs the agent-side hook (docs/tool-calls.md)
+    "no_tool_call": {"name", "for", "since"},
 }
 SINCE = ("say", "start")
 
@@ -41,7 +43,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
 
 @dataclass
 class Step:
-    kind: str                  # say | wait | agent_says | user_heard | call | no_call | no_agent_reply
+    kind: str                  # say | wait | agent_says | user_heard | call | no_call | no_agent_reply | tool_call | no_tool_call
     level: str                 # "" for say/wait, else "expect" (fail) or "require" (inconclusive)
     params: dict[str, Any] = field(default_factory=dict)
 
@@ -124,6 +126,10 @@ def _parse_step(where: str, raw: Any) -> Step:
             raise ConfigError(f"{where}: `matches` is not a valid regex: {exc}") from None
     if kind == "call" and not params.get("path"):
         raise ConfigError(f"{where}: `{key}` needs `path`")
+    if kind in ("tool_call", "no_tool_call") and not params.get("name"):
+        raise ConfigError(f"{where}: `{key}` needs `name` (the tool's name; a glob such as `cancel_*` works)")
+    if "args_contains" in params and not isinstance(params["args_contains"], dict):
+        raise ConfigError(f"{where}: `args_contains` must be a mapping of argument name to value")
     if kind == "user_heard" and not params.get("matches"):
         params = {**params, "matches": "."}
     return Step(kind, level, params)

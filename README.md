@@ -1,5 +1,9 @@
 # voicerig
 
+[![CI](https://github.com/maxdcloudops/voicerig/actions/workflows/ci.yml/badge.svg)](https://github.com/maxdcloudops/voicerig/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+![Python 3.10-3.13](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue.svg)
+
 **Test a LiveKit voice agent by speaking to it.** voicerig starts a local LiveKit server, runs *your* agent next
 to it, joins a room with a "microphone", plays recorded speech into it in real time, and watches what the
 agent says and which backend calls it makes. No human, no phone, no cloud.
@@ -18,6 +22,10 @@ audio, real speech-to-text and a real model in the loop - so that is what this r
 A scenario is a short script in YAML. A verdict is `PASS`, `FAIL` (the agent did the wrong thing) or
 `INCONCLUSIVE` (the conversation never reached the state under test) - and INCONCLUSIVE fails the run too,
 because a silence is not a pass.
+
+![A careful agent passes every scenario; a deliberately bad one goes red](docs/demo.svg)
+
+*Real output of `voicerig run` on `examples/order-desk`, trimmed to the verdict lines: the agent as written, then the same agent told to cancel without asking.*
 
 ## Quick start
 
@@ -90,6 +98,8 @@ Each step is a one-key mapping. `expect_*` failing means **FAIL**; the same chec
 | `expect_call: {path, body_contains, within}` | the backend received a call; `path` may be a glob; string values match as case-insensitive substrings |
 | `expect_no_call: {path, for}` | for `for` seconds, no (matching) call arrived |
 | `expect_no_agent_reply: {for}` | the agent stayed silent for `for` seconds |
+| `expect_tool_call: {name, args_contains, within}` | the agent called a matching tool (glob on the name, substring match on argument values). Needs a 6-line hook in the agent - [docs/tool-calls.md](docs/tool-calls.md) |
+| `expect_no_tool_call: {name, for}` | no matching tool was called for `for` seconds. **INCONCLUSIVE, never PASS, if the agent has not announced the hook** |
 
 Every check looks at what happened since the last `say` began (`since: start` widens it to the whole scenario).
 When an `agent_says` step follows a `say`, the delay from the end of your speech to the agent's first text is
@@ -116,23 +126,41 @@ These come from running this against real agents and getting it wrong first.
 ## What it measured on the example
 
 `examples/order-desk` is a plain LiveKit agent (Groq Whisper, Claude Haiku 4.5, one irreversible tool, a prompt
-that says "ask first"). On macOS/arm64, Docker 29, livekit-agents 1.6.7, one run each:
+that says "ask first"). macOS/arm64, Docker 29, livekit-agents 1.6.7, 2026-11-21.
 
-| agent | scenario | verdict |
-|---|---|---|
-| careful (prompt as written) | all 6 scenarios | 6 PASS |
-| `eager` (told to cancel at once) | `asks_before_cancelling` | **FAIL** - agent cancelled without asking |
-| `eager` | `cancels_after_yes` | **INCONCLUSIVE** after 2 attempts - never reached the state it tests |
+**One run of every scenario** (a smoke test):
 
-A single run per cell is a smoke test, not a measurement: set `repeat` for rates before you quote a number.
+| agent | result |
+|---|---|
+| careful (prompt as written) | 6 PASS |
+| `eager` (told to cancel at once) | `asks_before_cancelling` **FAIL**; `cancels_after_yes`, `does_not_cancel_after_no`, `thanks_is_not_a_yes` **INCONCLUSIVE** (the agent never asked, so the state they test was never reached); `hears_yes`, `answers_a_question` PASS |
+
+**Twenty runs each**, `voicerig run --only <scenario> --repeat 20`, every run in a fresh room (rate with 95% Wilson interval):
+
+| agent | scenario | passed | 95% interval | reply latency p50 / p95 / max |
+|---|---|---|---|---|
+| careful | `asks_before_cancelling` | 20/20 | 84-100% | 2.71 s / 7.58 s / 8.45 s |
+| careful | `cancels_after_yes` | 20/20 | 84-100% | 2.51 s / 4.42 s / 4.71 s |
+| `eager` | `asks_before_cancelling` | **0/20** | 0-16% | 4.38 s / 5.19 s / 5.43 s (n=13) |
+
+Read these for what they are: 20 trials bound the true rate only to "at least about 84%", not "100%"; the careful
+agent can still fail one run in ten and this would not have shown it. Latency is end of the caller's speech to the
+agent's first text (speech-to-text plus model, no speech synthesis); with 20 samples p95 is close to the maximum.
+
+One result worth the trouble of measuring: in 13 of the 20 `eager` runs the agent cancelled and then asked
+"Is there anything else I can help with?" - which satisfies `expect_agent_says: {question: true}`. The check on the
+backend (`expect_no_call`) is what caught it. A question-only check would have passed a bad agent most of the time.
+
 The same rig also ran, unchanged apart from `transcripts: {source: data}`, against a production agent that
-publishes JSON transcripts on its own data topic.
+publishes JSON transcripts on its own data topic. The example also passed 6/6 with every image forced to
+`linux/amd64` (emulated on that Mac).
 
 ## Limits - read before you trust a green run
 
 - **LiveKit Agents only.** It joins a LiveKit room and reads LiveKit transcripts or data messages.
-- **It sees transcripts and HTTP calls, not tool calls.** Side effects must reach the stub backend over HTTP.
-  An agent whose tool does something local and silent cannot be asserted on.
+- **By default it sees transcripts and HTTP calls, not tool calls.** Side effects should reach the stub backend over
+  HTTP. To assert on tool names and arguments the agent needs a small hook ([docs/tool-calls.md](docs/tool-calls.md));
+  an agent whose tool does something local and silent, without the hook, cannot be asserted on.
 - **Synthetic speech.** The bundled WAVs come from a text-to-speech voice. Real accents, noise and crosstalk are
   yours to record; STT behaviour on TTS audio is not STT behaviour on people.
 - **Real models are not deterministic.** Hence `attempts`, `repeat` and INCONCLUSIVE. A scenario that passes
@@ -149,7 +177,7 @@ publishes JSON transcripts on its own data topic.
 
 ```
 voicerig validate              check rig.yaml and the WAV files without starting Docker
-voicerig run [--only a,b] [--attempts N] [--keep]
+voicerig run [--only a,b] [--attempts N] [--repeat N] [--keep]
 voicerig logs [agent|livekit|stub]      voicerig down
 voicerig tts phrases.yaml -o audio      synthesize utterances (macOS `say` or espeak-ng, plus ffmpeg)
 ```
@@ -158,7 +186,7 @@ voicerig tts phrases.yaml -o audio      synthesize utterances (macOS `say` or es
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
-.venv/bin/pytest          # 40 tests, no Docker; the engine, config, stub and compose generation
+.venv/bin/pytest          # 56 tests, no Docker; the engine, config, stub and compose generation
 ```
 
 Apache-2.0.

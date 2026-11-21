@@ -1,6 +1,6 @@
 [project]
 name = "voicerig"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Test a LiveKit voice agent by speaking to it: real audio in, real agent, recorded backend calls out. No human, no cloud."
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -17,6 +17,9 @@ voicerig = "voicerig.cli:main"
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "voicerig.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]

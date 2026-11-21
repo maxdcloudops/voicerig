@@ -40,6 +40,10 @@ def test_agent_needs_exactly_one_of_image_or_build(rig):
     ("- expect_call: {path: /x, since: later}", "since must be"),
     ("- say: nonexistent", "does not exist"),
     ("- {say: yes, expect_call: {path: /x}}", "one-key mapping"),
+    ("- expect_tool_call: {within: 3}", "needs `name`"),
+    ("- expect_no_tool_call: {for: 3}", "needs `name`"),
+    ("- expect_tool_call: {name: x, args_contains: nope}", "must be a mapping"),
+    ("- expect_tool_call: {name: x, path: /y}", "does not take"),
 ])
 def test_bad_steps_name_the_problem(rig, step, msg):
     with pytest.raises(ConfigError, match=msg):

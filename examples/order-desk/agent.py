@@ -6,6 +6,8 @@ on real speech, every time, is exactly what the scenarios in rig.yaml measure.
 
 No TTS: the agent answers in text over LiveKit's standard transcription stream, which the rig reads.
 """
+import asyncio
+import json
 import os
 
 import aiohttp
@@ -25,6 +27,25 @@ if os.getenv("ORDER_DESK_MODE") == "eager":
     INSTRUCTIONS = INSTRUCTIONS.replace(
         'before you call cancel_order you must ask\n"Shall I cancel order 4417?" and wait for the caller to answer yes.',
         "when the caller asks to cancel, call cancel_order for order 4417 immediately, without asking.")
+
+
+def report_tool_calls(session: AgentSession, room) -> None:
+    """The optional voicerig hook (docs/tool-calls.md): tell the rig which tools the agent called.
+
+    LiveKit does not publish tool calls to the room, so the rig cannot see them unless the agent says so. Without
+    this the scenarios can still assert on the backend HTTP calls; with it they can also assert on the tool name
+    and arguments - including that a tool was NOT called. The "ready" message tells the rig the hook is present,
+    so a missing hook can never make a "no tool call" check pass by accident.
+    """
+    def send(payload: dict) -> None:
+        asyncio.ensure_future(room.local_participant.send_text(json.dumps(payload), topic="voicerig.tool_calls"))
+
+    @session.on("function_tools_executed")
+    def _(ev) -> None:
+        for call in ev.function_calls:
+            send({"name": call.name, "arguments": call.arguments})
+
+    send({"hook": "ready"})
 
 
 async def _post(path: str, body: dict) -> str:
@@ -65,6 +86,7 @@ async def entrypoint(ctx: JobContext) -> None:
         vad=_VAD,
     )
     await session.start(agent=OrderDesk(), room=ctx.room)
+    report_tool_calls(session, ctx.room)
     session.output.set_audio_enabled(False)      # no TTS: text-only replies
     await session.generate_reply(instructions="Greet the caller in one short sentence and offer help with their order.")
 
